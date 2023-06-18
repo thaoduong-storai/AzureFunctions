@@ -18,7 +18,7 @@ namespace FunctionApp_Example
     {
         [FunctionName("Function1")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
             // Retrieve query parameters from the RequestUri
@@ -55,6 +55,7 @@ namespace FunctionApp_Example
                 // Gửi thông báo đến Microsoft Teams
                 string teamsWebhookUrl = "https://storai.webhook.office.com/webhookb2/248ada60-dab6-4779-9bc7-f229ed5811e8@6e40d558-bf93-4d3a-8723-948132358ceb/IncomingWebhook/46905151f02841e09292d37d4152c906/77de5f65-8817-4ee0-ab73-2962f57c557a";
                 var httpClient = new HttpClient();
+                httpClient.BaseAddress = new Uri("https://storai.webhook.office.com/");
                 var payload = new { text = teamsMessage };
                 var jsonPayload = JsonConvert.SerializeObject(payload);
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
@@ -79,3 +80,6 @@ namespace FunctionApp_Example
         }
     }
 }
+
+
+//comment check
