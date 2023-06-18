@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -38,47 +39,36 @@ namespace FunctionApp_Example
             {
                 var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
 
-                StringBuilder teamsMessageBuilder = new StringBuilder();
-                teamsMessageBuilder.AppendLine("Danh sách commit:");
-
-                foreach (var commit in commits)
+                var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
+                if (latestCommit != null)
                 {
-                    var commitInfo = await githubClient.User.Get(commit.Author.Login);
+                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
 
-                    // Kiểm tra và so sánh ngày thời gian commit với ngày thời gian hiện tại
-                    if (commit.Commit.Author.Date >= DateTime.Now.AddDays(-1))
+                    StringBuilder teamsMessageBuilder = new StringBuilder();
+                    teamsMessageBuilder.AppendLine("**Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")**");
+                    teamsMessageBuilder.AppendLine("**Nội dung commit: " + latestCommit.Commit.Message + "**");
+
+                    string teamsMessage = teamsMessageBuilder.ToString();
+
+                    string teamsWebhookUrl = "https://storai.webhook.office.com/webhookb2/248ada60-dab6-4779-9bc7-f229ed5811e8@6e40d558-bf93-4d3a-8723-948132358ceb/IncomingWebhook/46905151f02841e09292d37d4152c906/77de5f65-8817-4ee0-ab73-2962f57c557a";
+                    var httpClient = new HttpClient();
+                    var payload = new { text = teamsMessage };
+                    var jsonPayload = JsonConvert.SerializeObject(payload);
+                    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                    var response = await httpClient.PostAsync(teamsWebhookUrl, content);
+
+                    if (response.IsSuccessStatusCode)
                     {
-                        // Commit mới, làm nổi bật
-                        teamsMessageBuilder.AppendLine("**Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")**");
-                        teamsMessageBuilder.AppendLine("**Nội dung commit: " + commit.Commit.Message + "**");
+                        return new OkObjectResult("Gửi tin nhắn thành công.");
                     }
                     else
                     {
-                        // Commit không phải mới, không làm nổi bật
-                        teamsMessageBuilder.AppendLine("Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")");
-                        teamsMessageBuilder.AppendLine("Nội dung commit: " + commit.Commit.Message);
+                        return new StatusCodeResult((int)response.StatusCode);
                     }
-
-                    teamsMessageBuilder.AppendLine();
-                }
-
-
-                string teamsMessage = teamsMessageBuilder.ToString();
-
-                string teamsWebhookUrl = "https://storai.webhook.office.com/webhookb2/248ada60-dab6-4779-9bc7-f229ed5811e8@6e40d558-bf93-4d3a-8723-948132358ceb/IncomingWebhook/46905151f02841e09292d37d4152c906/77de5f65-8817-4ee0-ab73-2962f57c557a";
-                var httpClient = new HttpClient();
-                var payload = new { text = teamsMessage };
-                var jsonPayload = JsonConvert.SerializeObject(payload);
-                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return new OkObjectResult("Lấy lịch sử commit và gửi thông báo thành công.");
                 }
                 else
                 {
-                    return new StatusCodeResult((int)response.StatusCode);
+                    return new OkObjectResult("Không tìm thấy commit mới.");
                 }
             }
             catch (Exception ex)
@@ -91,4 +81,3 @@ namespace FunctionApp_Example
         }
     }
 }
-//check commit github
