@@ -45,10 +45,23 @@ namespace FunctionApp_Example
                 {
                     var commitInfo = await githubClient.User.Get(commit.Author.Login);
 
-                    teamsMessageBuilder.AppendLine($"Người commit: {commitInfo.Name} ({commitInfo.Login})");
-                    teamsMessageBuilder.AppendLine($"Nội dung commit: {commit.Commit.Message}");
+                    // Kiểm tra và so sánh ngày thời gian commit với ngày thời gian hiện tại
+                    if (commit.Commit.Author.Date >= DateTime.Now.AddDays(-1))
+                    {
+                        // Commit mới, làm nổi bật
+                        teamsMessageBuilder.AppendLine("**Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")**");
+                        teamsMessageBuilder.AppendLine("**Nội dung commit: " + commit.Commit.Message + "**");
+                    }
+                    else
+                    {
+                        // Commit không phải mới, không làm nổi bật
+                        teamsMessageBuilder.AppendLine("Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")");
+                        teamsMessageBuilder.AppendLine("Nội dung commit: " + commit.Commit.Message);
+                    }
+
                     teamsMessageBuilder.AppendLine();
                 }
+
 
                 string teamsMessage = teamsMessageBuilder.ToString();
 
