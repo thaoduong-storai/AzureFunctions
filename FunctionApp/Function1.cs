@@ -45,12 +45,11 @@ namespace FunctionApp_Example
                     var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
 
                     StringBuilder teamsMessageBuilder = new StringBuilder();
-                    teamsMessageBuilder.AppendLine($"***Người commit: *** {commitInfo.Name} ({commitInfo.Login})");
+                    teamsMessageBuilder.AppendLine("***Người commit: ***" + commitInfo.Name + commitInfo.Login );
                     teamsMessageBuilder.AppendLine(); // Xuống dòng sau tin nhắn
-                    teamsMessageBuilder.AppendLine($"***Nội dung commit:*** {latestCommit.Commit.Message}");
+                    teamsMessageBuilder.AppendLine("***Nội dung commit: ***" + latestCommit.Commit.Message);
 
                     string teamsMessage = teamsMessageBuilder.ToString();
-
 
                     string teamsWebhookUrl = "https://storai.webhook.office.com/webhookb2/248ada60-dab6-4779-9bc7-f229ed5811e8@6e40d558-bf93-4d3a-8723-948132358ceb/IncomingWebhook/46905151f02841e09292d37d4152c906/77de5f65-8817-4ee0-ab73-2962f57c557a";
                     var httpClient = new HttpClient();
