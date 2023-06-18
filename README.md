@@ -1,1 +1,1 @@
-# Azure Functions GitHub commit history to Microsoft Teams
+# Azure Functions get GitHub commit history to Microsoft Teams
