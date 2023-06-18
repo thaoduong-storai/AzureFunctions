@@ -46,7 +46,7 @@ namespace FunctionApp_Example
 
                     StringBuilder teamsMessageBuilder = new StringBuilder();
                     teamsMessageBuilder.AppendLine("**Người commit: " + commitInfo.Name + " (" + commitInfo.Login + ")**");
-                    teamsMessageBuilder.AppendLine("**Nội dung commit: " + latestCommit.Commit.Message + "**");
+                    teamsMessageBuilder.AppendLine("**\nNội dung commit: " + latestCommit.Commit.Message + "**");
 
                     string teamsMessage = teamsMessageBuilder.ToString();
 
