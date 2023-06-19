@@ -31,7 +31,7 @@ namespace FunctionApp_Example
                 return new BadRequestObjectResult("Vui lòng cung cấp thông tin chính xác về repository.");
             }
 
-            string githubAccessToken = "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";
+            string githubAccessToken = "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";
             var githubClient = new GitHubClient(new ProductHeaderValue("Azure-Function-GitHub"));
             githubClient.Credentials = new Credentials(githubAccessToken);
 
@@ -83,4 +83,3 @@ namespace FunctionApp_Example
         }
     }
 }
-//check token
