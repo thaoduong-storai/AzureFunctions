@@ -1,2 +1,3 @@
-# Azure Functions get GitHub commit history to Microsoft Teams!
+# Azure Functions
+## Using Azure Functions get GitHub commit history to Microsoft Teams!!!
 
