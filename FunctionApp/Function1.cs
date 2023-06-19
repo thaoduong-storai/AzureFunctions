@@ -31,7 +31,7 @@ namespace FunctionApp_Example
                 return new BadRequestObjectResult("Vui lòng cung cấp thông tin chính xác về repository.");
             }
 
-            string githubAccessToken = "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";
+            string githubAccessToken = "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";
             var githubClient = new GitHubClient(new ProductHeaderValue("Azure-Function-GitHub"));
             githubClient.Credentials = new Credentials(githubAccessToken);
 
@@ -48,7 +48,7 @@ namespace FunctionApp_Example
 
                     teamsMessageBuilder.AppendLine("***Người commit:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine(); // Xuống dòng
-                    teamsMessageBuilder.AppendLine("***Nội dung commit:*** " + latestCommit.Commit.Message); //định dạng Markdown
+                    teamsMessageBuilder.AppendLine("***Nội dung commit:*** " + latestCommit.Commit.Message);
 
                     string teamsMessage = teamsMessageBuilder.ToString();
 
@@ -61,7 +61,7 @@ namespace FunctionApp_Example
 
                     if (response.IsSuccessStatusCode)
                     {
-                        return new OkObjectResult("Gửi tin nhắn thành công.");
+                        return new OkObjectResult("Lấy commit và gửi tin nhắn thành công.");
                     }
                     else
                     {
@@ -83,4 +83,4 @@ namespace FunctionApp_Example
         }
     }
 }
-//check branch
+//check token
