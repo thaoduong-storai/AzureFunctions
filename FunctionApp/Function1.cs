@@ -45,6 +45,7 @@ namespace FunctionApp_Example
                     var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
 
                     StringBuilder teamsMessageBuilder = new StringBuilder();
+
                     teamsMessageBuilder.AppendLine("***Người commit:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine(); // Xuống dòng
                     teamsMessageBuilder.AppendLine("***Nội dung commit:*** " + latestCommit.Commit.Message); //định dạng Markdown
