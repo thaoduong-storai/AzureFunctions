@@ -39,6 +39,8 @@ namespace FunctionApp
 
             try
             {
+                string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
+
                 var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
 
                 var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
@@ -48,7 +50,7 @@ namespace FunctionApp
 
                     StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                    string commitUrl = "https://github.com/thaoduong-storai/AzureFunctions/commit/fa9e90447dc839bb4fba9510302df490bb45afff";
+                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
                     teamsMessageBuilder.AppendLine("***The commiter:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine();
