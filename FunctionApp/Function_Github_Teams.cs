@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
-namespace FunctionApp_Example
+namespace FunctionApp
 {
     public static class Function_Github_Teams
     {
@@ -22,6 +22,8 @@ namespace FunctionApp_Example
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+            log.LogInformation("Function1 is processing...");
+
             var queryParameters = HttpUtility.ParseQueryString(req.QueryString.ToString());
             string owner = queryParameters["owner"];
             string repo = queryParameters["repo"];
@@ -58,6 +60,8 @@ namespace FunctionApp_Example
                     var jsonPayload = JsonConvert.SerializeObject(payload);
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
+
+                    log.LogInformation("Function1 completed successfully.");
 
                     if (response.IsSuccessStatusCode)
                     {
