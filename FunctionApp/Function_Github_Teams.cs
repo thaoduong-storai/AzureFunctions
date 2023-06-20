@@ -22,7 +22,7 @@ namespace FunctionApp
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("Function1 is processing...");
+            log.LogInformation("Function_Github_Teams is processing...");
 
             var queryParameters = HttpUtility.ParseQueryString(req.QueryString.ToString());
             string owner = queryParameters["owner"];
@@ -30,7 +30,7 @@ namespace FunctionApp
 
             if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
             {
-                return new BadRequestObjectResult("Vui lòng cung cấp thông tin chính xác về repository.");
+                return new BadRequestObjectResult("Please provide correct information about the repository!!");
             }
 
             string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
@@ -48,9 +48,13 @@ namespace FunctionApp
 
                     StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                    teamsMessageBuilder.AppendLine("***Người commit:*** " + commitInfo.Name + commitInfo.Login);
-                    teamsMessageBuilder.AppendLine(); // Xuống dòng
-                    teamsMessageBuilder.AppendLine("***Nội dung commit:*** " + latestCommit.Commit.Message); //định dạng Markdown
+                    string commitUrl = "https://github.com/thaoduong-storai/AzureFunctions/commit/fa9e90447dc839bb4fba9510302df490bb45afff";
+
+                    teamsMessageBuilder.AppendLine("***The commiter:*** " + commitInfo.Name + commitInfo.Login);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
 
                     string teamsMessage = teamsMessageBuilder.ToString();
 
@@ -61,11 +65,10 @@ namespace FunctionApp
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
 
-                    log.LogInformation("Function1 completed successfully.");
-
                     if (response.IsSuccessStatusCode)
                     {
-                        return new OkObjectResult("Lấy commit và gửi tin nhắn thành công.");
+                        log.LogInformation("Function_Github_Teams completed successfully.");
+                        return new OkObjectResult("Get the commit and send the message successfully!");
                     }
                     else
                     {
@@ -74,12 +77,12 @@ namespace FunctionApp
                 }
                 else
                 {
-                    return new OkObjectResult("Không tìm thấy commit mới.");
+                    return new OkObjectResult("New commit not found!!");
                 }
             }
             catch (Exception ex)
             {
-                return new ObjectResult("Đã xảy ra lỗi khi lấy lịch sử commit: " + ex.Message)
+                return new ObjectResult("An error occurred while getting the commit: " + ex.Message)
                 {
                     StatusCode = (int)HttpStatusCode.InternalServerError
                 };
