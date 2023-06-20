@@ -92,5 +92,3 @@ namespace FunctionApp
         }
     }
 }
-
-//check link commit
