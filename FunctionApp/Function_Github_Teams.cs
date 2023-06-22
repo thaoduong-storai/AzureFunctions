@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
@@ -60,7 +61,16 @@ namespace FunctionApp
 
                     string teamsMessage = teamsMessageBuilder.ToString();
 
-                    string teamsWebhookUrl = "https://storai.webhook.office.com/webhookb2/248ada60-dab6-4779-9bc7-f229ed5811e8@6e40d558-bf93-4d3a-8723-948132358ceb/IncomingWebhook/46905151f02841e09292d37d4152c906/77de5f65-8817-4ee0-ab73-2962f57c557a";
+                    // Truy xuất URL webhook từ Azure Key Vault
+                    var config = new ConfigurationBuilder()
+                        .SetBasePath(Environment.CurrentDirectory)
+                        .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+                        .AddEnvironmentVariables()
+                        .Build();
+
+                    string teamsWebhookUrl = config["TeamsWebhookUrl"];
+
+                    //string teamsWebhookUrl = "";
                     var httpClient = new HttpClient();
                     var payload = new { text = teamsMessage };
                     var jsonPayload = JsonConvert.SerializeObject(payload);
