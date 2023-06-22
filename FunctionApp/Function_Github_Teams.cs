@@ -70,7 +70,6 @@ namespace FunctionApp
 
                     string teamsWebhookUrl = config["TeamsWebhookUrl"];
 
-                    //string teamsWebhookUrl = "";
                     var httpClient = new HttpClient();
                     var payload = new { text = teamsMessage };
                     var jsonPayload = JsonConvert.SerializeObject(payload);
