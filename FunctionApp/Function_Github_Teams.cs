@@ -61,14 +61,7 @@ namespace FunctionApp
 
                     string teamsMessage = teamsMessageBuilder.ToString();
 
-                    // Truy xuất URL webhook từ Azure Key Vault
-                    var config = new ConfigurationBuilder()
-                        .SetBasePath(Environment.CurrentDirectory)
-                        .AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
-                        .AddEnvironmentVariables()
-                        .Build();
-
-                    string teamsWebhookUrl = config["TeamsWebhookUrl"];
+                    string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
                     var httpClient = new HttpClient();
                     var payload = new { text = teamsMessage };
@@ -101,4 +94,3 @@ namespace FunctionApp
         }
     }
 }
-//checkcommit
