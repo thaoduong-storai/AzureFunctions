@@ -35,7 +35,7 @@ namespace FunctionApp
             }
 
             string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
-            var githubClient = new GitHubClient(new ProductHeaderValue("Azure-Function-GitHub"));
+            var githubClient = new GitHubClient(new ProductHeaderValue("AzureFunctions"));
             githubClient.Credentials = new Credentials(githubAccessToken);
 
             try
