@@ -4,7 +4,11 @@
 name: Build and deploy dotnet core app to Azure Function App - functionapp-testgit
 
 on:
-  [push]
+  push:
+    branches:
+      - master
+      - test
+  workflow_dispatch:
 
 env:
   AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
