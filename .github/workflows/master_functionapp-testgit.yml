@@ -4,6 +4,9 @@
 name: Build and deploy dotnet core app to Azure Function App - functionapp-testgit
 
 on:
+  pull_request:
+    types: [opened, closed, reopened]
+    
   push:
     branches:
       - master
