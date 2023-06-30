@@ -94,4 +94,3 @@ namespace FunctionApp
         }
     }
 }
-//check commit mess
