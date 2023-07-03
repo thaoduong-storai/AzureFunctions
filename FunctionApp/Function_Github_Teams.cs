@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -52,14 +53,9 @@ namespace FunctionApp
 
                     string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
-                    var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-                    var branchNames = branches.Select(b => b.Name);
-
                     teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("*Branch commit:* " + string.Join(", ", branchNames));
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                 }
