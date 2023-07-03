@@ -52,8 +52,8 @@ namespace FunctionApp
 
                     string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
-                    var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-                    var branchNames = branches.Select(b => b.Name);
+                    var branches = await githubClient.Repository.Commit.GetBranchesContainingCommit(owner, repo, latestCommit.Sha);
+                    var branchNames = branches.Select(b => b.Name).ToList();
 
                     teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine();
