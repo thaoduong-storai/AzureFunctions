@@ -41,51 +41,55 @@ namespace FunctionApp
             try
             {
                 string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
-
+        
                 StringBuilder teamsMessageBuilder = new StringBuilder();
-
+        
                 var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-
+        
+                var latestCommit = new Commit();
+        
                 foreach (var branch in branches)
                 {
-                    // Lấy thông tin commit mới nhất trên branch hiện tại
-                    var branchCommit = await githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha);
-
-                    // So sánh commit giữa branch hiện tại và branch mặc định (ví dụ: master)
-                    var compare = await githubClient.Repository.Commit.Compare(owner, repo, "master", branch.Name);
-
-                    if (compare.AheadBy > 0)
+                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
+        
+                    foreach (var commit in commits)
                     {
-                        // Có commit mới trên branch hiện tại
-                        var latestCommit = compare.Commits.First();
-                        var commitInfo = await githubClient.User.Get(latestCommit.Commit.Author.Name);
-                        string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
-
-                        teamsMessageBuilder.AppendLine("***The committer on branch " + branch.Name + ":*** " + commitInfo.Name + commitInfo.Login);
-                        teamsMessageBuilder.AppendLine();
-                        teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                        teamsMessageBuilder.AppendLine();
-                        teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
-                        teamsMessageBuilder.AppendLine();
+                        if (commit.Commit.Author.Date > latestCommit.Commit.Author.Date)
+                        {
+                            latestCommit = commit;
+                        }
                     }
                 }
-
+        
+                if (latestCommit != null)
+                {
+                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
+                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
+        
+                    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                    teamsMessageBuilder.AppendLine();
+                }
+        
                 if (teamsMessageBuilder.Length > 0)
                 {
                     string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
-
+        
                     var httpClient = new HttpClient();
                     var payload = new { text = teamsMessageBuilder.ToString() };
                     var jsonPayload = JsonConvert.SerializeObject(payload);
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-
+        
                     if (!response.IsSuccessStatusCode)
                     {
                         return new StatusCodeResult((int)response.StatusCode);
                     }
                 }
-
+        
                 log.LogInformation("Function_Github_Teams completed successfully.");
                 return new OkObjectResult("Get the latest commits and send the messages successfully!");
             }
