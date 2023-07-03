@@ -48,7 +48,7 @@ namespace FunctionApp
 
                 foreach (var branch in branches)
                 {
-                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
+                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
                     var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
 
                     if (latestCommit != null)
