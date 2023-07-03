@@ -25,13 +25,14 @@ namespace FunctionApp
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
-            string repo = req.Query["repo"];
-            string owner = req.Query["owner"];
+            //var queryParameters = HttpUtility.ParseQueryString(req.QueryString.ToString());
+            var queryParameters = req.Query;
+            string owner = queryParameters["owner"];
+            string repo = queryParameters["repo"];
 
             if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
             {
-                repo = req.Form["repository"];
-                owner = req.Form["owner"];
+                return new BadRequestObjectResult("Please provide correct information about the repository!!");
             }
 
             string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
