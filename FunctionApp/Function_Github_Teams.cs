@@ -42,16 +42,10 @@ namespace FunctionApp
             {
                 string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
 
-                var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-
                 StringBuilder teamsMessageBuilder = new StringBuilder();
 
                 var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
                 var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
-
-                var commitBranches = branches.Where(b => b.Commit.Sha == latestCommit.Sha)
-                                                 .Select(b => b.Name)
-                                                 .ToList();
 
                 if (latestCommit != null)
                 {
@@ -62,8 +56,6 @@ namespace FunctionApp
                     teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("***Branch commit:*** " + commitBranches);
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                 }
