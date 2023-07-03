@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -41,27 +42,29 @@ namespace FunctionApp
             {
                 string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
 
+                var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
+
                 StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
-                var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
-
-                if (latestCommit != null)
+                foreach (var branch in branches)
                 {
-                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
+                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
+                    var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
 
-                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
+                    if (latestCommit != null)
+                    {
+                        var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
 
-                    var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-                    var branchNames = branches.Select(b => b.Name);
+                        string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
-                    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("*Branch commit:* " + string.Join(", ", branchNames));
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                        teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("***Branch commit:*** " + branch.Name);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                    }
                 }
 
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
