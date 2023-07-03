@@ -12,7 +12,6 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace FunctionApp
 {
@@ -44,41 +43,44 @@ namespace FunctionApp
 
                 var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
 
+                StringBuilder teamsMessageBuilder = new StringBuilder();
+
                 foreach (var branch in branches)
                 {
                     var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
+                    var latestCommit = commits.LastOrDefault();
 
-                    StringBuilder teamsMessageBuilder = new StringBuilder();
-
-                    foreach (var commit in commits)
+                    if (latestCommit != null)
                     {
-                        var commitInfo = await githubClient.User.Get(commit.Author.Login);
+                        var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
 
-                        string commitUrl = string.Format(commitUrlFormat, owner, repo, commit.Sha);
+                        string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
                         teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
                         teamsMessageBuilder.AppendLine();
-                        teamsMessageBuilder.AppendLine("***Commit content:*** " + commit.Commit.Message);
+                        teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("### Branch: " + branch.Name);
                         teamsMessageBuilder.AppendLine();
                         teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                     }
+                }
 
-                    string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
+                string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
-                    var httpClient = new HttpClient();
-                    var payload = new { text = teamsMessageBuilder.ToString() };
-                    var jsonPayload = JsonConvert.SerializeObject(payload);
-                    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                    var response = await httpClient.PostAsync(teamsWebhookUrl, content);
+                var httpClient = new HttpClient();
+                var payload = new { text = teamsMessageBuilder.ToString() };
+                var jsonPayload = JsonConvert.SerializeObject(payload);
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync(teamsWebhookUrl, content);
 
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        return new StatusCodeResult((int)response.StatusCode);
-                    }
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new StatusCodeResult((int)response.StatusCode);
                 }
 
                 log.LogInformation("Function_Github_Teams completed successfully.");
-                return new OkObjectResult("Get the commits and send the messages successfully!");
+                return new OkObjectResult("Get the latest commits and send the messages successfully!");
             }
             catch (Exception ex)
             {
