@@ -20,8 +20,8 @@ namespace FunctionApp
     {
         [FunctionName("Function_Github_Teams")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-            ILogger log)
+        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+        ILogger log)
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
@@ -44,33 +44,46 @@ namespace FunctionApp
 
                 StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
-                var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
+                var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
 
-                if (latestCommit != null)
+                foreach (var branch in branches)
                 {
-                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
+                    // Lấy thông tin commit mới nhất trên branch hiện tại
+                    var branchCommit = await githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha);
 
-                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
+                    // So sánh commit giữa branch hiện tại và branch mặc định (ví dụ: master)
+                    var compare = await githubClient.Repository.Commit.Compare(owner, repo, "master", branch.Name);
 
-                    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                    teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                    if (compare.AheadBy > 0)
+                    {
+                        // Có commit mới trên branch hiện tại
+                        var latestCommit = compare.Commits.First();
+                        var commitInfo = await githubClient.User.Get(latestCommit.Commit.Author.Name);
+                        string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
+
+                        teamsMessageBuilder.AppendLine("***The committer on branch " + branch.Name + ":*** " + commitInfo.Name + commitInfo.Login);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                        teamsMessageBuilder.AppendLine();
+                        teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                        teamsMessageBuilder.AppendLine();
+                    }
                 }
 
-                string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
-
-                var httpClient = new HttpClient();
-                var payload = new { text = teamsMessageBuilder.ToString() };
-                var jsonPayload = JsonConvert.SerializeObject(payload);
-                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-
-                if (!response.IsSuccessStatusCode)
+                if (teamsMessageBuilder.Length > 0)
                 {
-                    return new StatusCodeResult((int)response.StatusCode);
+                    string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
+
+                    var httpClient = new HttpClient();
+                    var payload = new { text = teamsMessageBuilder.ToString() };
+                    var jsonPayload = JsonConvert.SerializeObject(payload);
+                    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                    var response = await httpClient.PostAsync(teamsWebhookUrl, content);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return new StatusCodeResult((int)response.StatusCode);
+                    }
                 }
 
                 log.LogInformation("Function_Github_Teams completed successfully.");
@@ -84,5 +97,6 @@ namespace FunctionApp
                 };
             }
         }
+
     }
 }
