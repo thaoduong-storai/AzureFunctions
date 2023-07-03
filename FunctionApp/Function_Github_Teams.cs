@@ -20,8 +20,8 @@ namespace FunctionApp
     {
         [FunctionName("Function_Github_Teams")]
         public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-        ILogger log)
+    [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+    ILogger log)
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
@@ -41,55 +41,43 @@ namespace FunctionApp
             try
             {
                 string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
-        
+
                 StringBuilder teamsMessageBuilder = new StringBuilder();
-        
+
                 var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-        
-                var latestCommit = new Commit();
-        
+
                 foreach (var branch in branches)
                 {
-                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
-        
-                    foreach (var commit in commits)
-                    {
-                        if (commit.Commit.Author.Date > latestCommit.Commit.Author.Date)
-                        {
-                            latestCommit = commit;
-                        }
-                    }
-                }
-        
-                if (latestCommit != null)
-                {
-                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
-                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
-        
-                    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
+                    // Lấy thông tin commit mới nhất trên branch hiện tại
+                    var branchCommit = await githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha);
+
+                    var commitInfo = await githubClient.User.Get(branchCommit.Author.Login);
+                    string commitUrl = string.Format(commitUrlFormat, owner, repo, branchCommit.Sha);
+
+                    teamsMessageBuilder.AppendLine("***The committer on branch " + branch.Name + ":*** " + commitInfo.Name + commitInfo.Login);
                     teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                    teamsMessageBuilder.AppendLine("***Commit content:*** " + branchCommit.Commit.Message);
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                     teamsMessageBuilder.AppendLine();
                 }
-        
+
                 if (teamsMessageBuilder.Length > 0)
                 {
                     string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
-        
+
                     var httpClient = new HttpClient();
                     var payload = new { text = teamsMessageBuilder.ToString() };
                     var jsonPayload = JsonConvert.SerializeObject(payload);
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-        
+
                     if (!response.IsSuccessStatusCode)
                     {
                         return new StatusCodeResult((int)response.StatusCode);
                     }
                 }
-        
+
                 log.LogInformation("Function_Github_Teams completed successfully.");
                 return new OkObjectResult("Get the latest commits and send the messages successfully!");
             }
@@ -101,6 +89,5 @@ namespace FunctionApp
                 };
             }
         }
-
     }
 }
