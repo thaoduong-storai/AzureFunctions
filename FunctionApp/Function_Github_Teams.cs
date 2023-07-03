@@ -46,9 +46,6 @@ namespace FunctionApp
 
                 StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                // Keep track of the latest commit's branch
-                string latestCommitBranch = null;
-
                 foreach (var branch in branches)
                 {
                     var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
@@ -67,20 +64,7 @@ namespace FunctionApp
                         teamsMessageBuilder.AppendLine("***Branch commit:*** " + branch.Name);
                         teamsMessageBuilder.AppendLine();
                         teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
-
-                        // Keep track of the branch containing the latest commit
-                        if (latestCommitBranch == null)
-                        {
-                            latestCommitBranch = branch.Name;
-                        }
                     }
-                }
-
-                // Remove the branch list if there's a branch containing the latest commit
-                if (latestCommitBranch != null)
-                {
-                    teamsMessageBuilder.Replace("***Branch commit:*** ", "");
-                    teamsMessageBuilder.AppendLine("***Branch commit:*** " + latestCommitBranch);
                 }
 
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
