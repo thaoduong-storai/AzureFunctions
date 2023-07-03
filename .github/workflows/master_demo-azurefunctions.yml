@@ -4,9 +4,13 @@
 name: Build and deploy dotnet core app to Azure Function App - Demo-AzureFunctions
 
 on:
+  pull_request:
+    types: [opened, closed, reopened]
+    
   push:
     branches:
       - master
+      - test
   workflow_dispatch:
 
 env:
