@@ -25,8 +25,6 @@ namespace FunctionApp
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
-            //var queryParameters = HttpUtility.ParseQueryString(req.QueryString.ToString());
-
             var queryParameters = req.Query;
             string owner = queryParameters["owner"];
             string repo = queryParameters["repo"];
@@ -46,11 +44,11 @@ namespace FunctionApp
 
                 var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
 
-                StringBuilder teamsMessageBuilder = new StringBuilder();
-
                 foreach (var branch in branches)
                 {
-                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
+                    var commits = await githubClient.Repository.Commit.GetAll(owner, repo, new CommitRequest { Sha = branch.Commit.Sha });
+
+                    StringBuilder teamsMessageBuilder = new StringBuilder();
 
                     foreach (var commit in commits)
                     {
@@ -63,34 +61,28 @@ namespace FunctionApp
                         teamsMessageBuilder.AppendLine("***Commit content:*** " + commit.Commit.Message);
                         teamsMessageBuilder.AppendLine();
                         teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                    }
 
-                        teamsMessageBuilder.AppendLine();
+                    string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
+
+                    var httpClient = new HttpClient();
+                    var payload = new { text = teamsMessageBuilder.ToString() };
+                    var jsonPayload = JsonConvert.SerializeObject(payload);
+                    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                    var response = await httpClient.PostAsync(teamsWebhookUrl, content);
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        return new StatusCodeResult((int)response.StatusCode);
                     }
                 }
 
-                string teamsMessage = teamsMessageBuilder.ToString();
-
-                string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
-
-                var httpClient = new HttpClient();
-                var payload = new { text = teamsMessage };
-                var jsonPayload = JsonConvert.SerializeObject(payload);
-                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    log.LogInformation("Function_Github_Teams completed successfully.");
-                    return new OkObjectResult("Get the commits and send the messages successfully!");
-                }
-                else
-                {
-                    return new StatusCodeResult((int)response.StatusCode);
-                }
+                log.LogInformation("Function_Github_Teams completed successfully.");
+                return new OkObjectResult("Get the commits and send the messages successfully!");
             }
             catch (Exception ex)
             {
-                return new ObjectResult("An error occurred while getting the commit: " + ex.Message)
+                return new ObjectResult("An error occurred while getting the commits: " + ex.Message)
                 {
                     StatusCode = (int)HttpStatusCode.InternalServerError
                 };
@@ -98,4 +90,3 @@ namespace FunctionApp
         }
     }
 }
-//check
