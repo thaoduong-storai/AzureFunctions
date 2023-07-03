@@ -60,7 +60,7 @@ namespace FunctionApp
                         teamsMessageBuilder.AppendLine();
                         teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
                         teamsMessageBuilder.AppendLine();
-                        teamsMessageBuilder.AppendLine("### Branch: " + branch.Name);
+                        teamsMessageBuilder.AppendLine("*Branch:* " + branch.Name);
                         teamsMessageBuilder.AppendLine();
                         teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                     }
