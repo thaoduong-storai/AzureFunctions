@@ -49,6 +49,10 @@ namespace FunctionApp
                 var commits = await githubClient.Repository.Commit.GetAll(owner, repo);
                 var latestCommit = commits.OrderByDescending(c => c.Commit.Author.Date).FirstOrDefault();
 
+                var commitBranches = branches.Where(b => b.Commit.Sha == latestCommit.Sha)
+                                                 .Select(b => b.Name)
+                                                 .ToList();
+
                 if (latestCommit != null)
                 {
                     var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
@@ -59,7 +63,7 @@ namespace FunctionApp
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
                     teamsMessageBuilder.AppendLine();
-                    teamsMessageBuilder.AppendLine("***Branch commit:*** " + latestCommit.Commit.Tree.Sha);
+                    teamsMessageBuilder.AppendLine("***Branch commit:*** " + commitBranches);
                     teamsMessageBuilder.AppendLine();
                     teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
                 }
