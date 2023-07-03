@@ -26,6 +26,7 @@ namespace FunctionApp
             log.LogInformation("Function_Github_Teams is processing...");
 
             //var queryParameters = HttpUtility.ParseQueryString(req.QueryString.ToString());
+
             var queryParameters = req.Query;
             string owner = queryParameters["owner"];
             string repo = queryParameters["repo"];
