@@ -25,19 +25,18 @@ namespace FunctionApp
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
-            //var queryParameters = req.Query;
-            //string owner = queryParameters["owner"];
-            //string repo = queryParameters["repo"];
+            var queryParameters = req.Query;
+            string owner = queryParameters["owner"];
+            string repo = queryParameters["repo"];
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             log.LogInformation(requestBody);
 
-            dynamic payload = JsonConvert.DeserializeObject(requestBody);
-            string owner = payload.repository.owner.login;
-            string repo = payload.repository.name;
-            string sha = payload.head_commit.id;
+            dynamic payloads = JsonConvert.DeserializeObject(requestBody);
+            //string owner = payloads.repository.owner.login;
+            //string repo = payloads.repository.name;
 
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || string.IsNullOrEmpty(sha))
+            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
             {
                 return new BadRequestObjectResult("Please provide correct information about the repository and commit!!");
             }
