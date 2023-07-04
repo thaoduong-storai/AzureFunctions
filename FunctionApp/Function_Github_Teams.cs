@@ -51,15 +51,18 @@ namespace FunctionApp
                 string commitUrl = string.Format(commitUrlFormat, owner, repo, sha);
                 string commitMessage = payload.head_commit?.message;
                 string committerName = payload.head_commit?.committer.name;
+                string commitTimestamp = payload.head_commit?.timestamp;
 
-                string teamsMessage = $"***The committer:*** {committerName}\n\n";
+                string teamsMessage = $"***Id:*** {sha}\n\n";
+                teamsMessage += $"***The committer:*** {committerName}\n\n";
                 teamsMessage += $"***Commit content:*** {commitMessage}\n\n";
+                teamsMessage += $"***Timestamp:*** {commitTimestamp}\n\n";
                 teamsMessage += $"[See details on Git]({commitUrl})\n\n";
 
                 if (!string.IsNullOrEmpty(teamsWebhookUrl))
                 {
                     var httpClient = new HttpClient();
-                    var payloadData = new { text = requestBody };
+                    var payloadData = new { text = teamsMessage };
                     var jsonPayload = JsonConvert.SerializeObject(payloadData);
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
