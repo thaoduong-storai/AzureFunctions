@@ -12,6 +12,9 @@ on:
       - master
       - test
       - test1
+      - test2
+      - test3
+      - ngocthao
   workflow_dispatch:
 
 env:
