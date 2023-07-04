@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
 using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -24,13 +25,21 @@ namespace FunctionApp
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
-            var queryParameters = req.Query;
-            string owner = queryParameters["owner"];
-            string repo = queryParameters["repo"];
+            //var queryParameters = req.Query;
+            //string owner = queryParameters["owner"];
+            //string repo = queryParameters["repo"];
 
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
+            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+            log.LogInformation(requestBody);
+
+            dynamic payload = JsonConvert.DeserializeObject(requestBody);
+            string owner = payload.repository.owner.login;
+            string repo = payload.repository.name;
+            string sha = payload.head_commit.id;
+
+            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || string.IsNullOrEmpty(sha))
             {
-                return new BadRequestObjectResult("Please provide correct information about the repository!!");
+                return new BadRequestObjectResult("Please provide correct information about the repository and commit!!");
             }
 
             string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
