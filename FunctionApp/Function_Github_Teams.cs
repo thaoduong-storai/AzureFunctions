@@ -47,11 +47,11 @@ namespace FunctionApp
 
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
-                string sha = payload.head_commit?.id;
+                string sha = payload.commits?.id;
                 string commitUrl = string.Format(commitUrlFormat, owner, repo, sha);
-                string commitMessage = payload.head_commit?.message;
-                string committerName = payload.head_commit?.committer.name;
-                string commitTimestamp = payload.head_commit?.timestamp;
+                string commitMessage = payload.commits?.message;
+                string committerName = payload.commits?.author.name;
+                string commitTimestamp = payload.commits?.timestamp;
 
                 string teamsMessage = $"***Id:*** {sha}\n\n";
                 teamsMessage += $"***The committer:*** {committerName}\n\n";
