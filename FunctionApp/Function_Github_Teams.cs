@@ -124,4 +124,3 @@ namespace FunctionApp
         }
     }
 }
-//check payload
