@@ -2,13 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Octokit;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -29,35 +26,44 @@ namespace FunctionApp
             log.LogInformation($"{requestBody}");
 
             dynamic payload = JsonConvert.DeserializeObject(requestBody);
-            string owner = payload.repository.owner.login;
-            string repo = payload.repository.name;
-
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
-            {
-                return new BadRequestObjectResult("Please provide correct information about the owner and repository!!");
-            }
-
-            string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
-            var githubClient = new GitHubClient(new ProductHeaderValue("AzureFunctions"));
-            githubClient.Credentials = new Credentials(githubAccessToken);
 
             try
             {
-                string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
-
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
-                string sha = payload.commits?.id;
-                string commitUrl = string.Format(commitUrlFormat, owner, repo, sha);
-                string commitMessage = payload.commits?.message;
-                string committerName = payload.commits?.author.name;
-                string commitTimestamp = payload.commits?.timestamp;
+                string sha = payload.head_commit != null ? payload.head_commit.id : null;
+                string commitUrl = payload.head_commit != null ? payload.head_commit.url : null;
+                string commitMessage = payload.head_commit != null ? payload.head_commit.message : null;
+                string committerName = payload.head_commit != null ? payload.head_commit.author?.name : null;
+                string commitTimestamp = payload.head_commit != null ? payload.head_commit.timestamp : null;
+
+                string repositoryFullName = payload.repository != null ? payload.repository.full_name : null;
+                int pullRequestNumber = payload.pull_request != null ? payload.pull_request.number : 0;
+                string pullRequestState = payload.pull_request != null ? payload.pull_request.state : null;
+                bool pullRequestMerged = payload.pull_request != null ? payload.pull_request.merged : false;
+                bool isPullRequest = !string.IsNullOrEmpty(pullRequestState);
 
                 string teamsMessage = $"***Id:*** {sha}\n\n";
                 teamsMessage += $"***The committer:*** {committerName}\n\n";
                 teamsMessage += $"***Commit content:*** {commitMessage}\n\n";
                 teamsMessage += $"***Timestamp:*** {commitTimestamp}\n\n";
                 teamsMessage += $"[See details on Git]({commitUrl})\n\n";
+
+                if (isPullRequest)
+                {
+                    bool isApproved = pullRequestMerged && pullRequestState == "closed";
+
+                    if (isApproved)
+                    {
+                        log.LogInformation("Pull request has been approved and merged.");
+                        teamsMessage += "\n\nPull request has been approved and merged.";
+                    }
+                    else
+                    {
+                        log.LogInformation("Pull request has not been approved and merged.");
+                        teamsMessage += "\n\nPull request has not been approved and merged.";
+                    }
+                }
 
                 if (!string.IsNullOrEmpty(teamsWebhookUrl))
                 {
