@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Octokit;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -20,19 +19,18 @@ namespace FunctionApp
     {
         [FunctionName("Function_Github_Teams")]
         public static async Task<IActionResult> Run(
-    [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
-    ILogger log)
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            ILogger log)
         {
             log.LogInformation("Function_Github_Teams is processing...");
 
             var queryParameters = req.Query;
             string owner = queryParameters["owner"];
             string repo = queryParameters["repo"];
-            string branchName = queryParameters["branch"]; // Tên nhánh cụ thể
 
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || string.IsNullOrEmpty(branchName))
+            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo))
             {
-                return new BadRequestObjectResult("Please provide correct information about the repository and branch!!");
+                return new BadRequestObjectResult("Please provide correct information about the repository!!");
             }
 
             string githubAccessToken = Environment.GetEnvironmentVariable("GitHubAccessToken");
@@ -45,21 +43,26 @@ namespace FunctionApp
 
                 StringBuilder teamsMessageBuilder = new StringBuilder();
 
-                // Lấy thông tin branch cụ thể
-                var branch = await githubClient.Repository.Branch.Get(owner, repo, branchName);
+                var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
 
-                // Lấy thông tin commit mới nhất trên branch cụ thể
-                var branchCommit = await githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha);
+                var latestCommit = branches
+                    .Select(branch => githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha))
+                    .Select(task => task.Result)
+                    .OrderByDescending(commit => commit.Commit.Author.Date)
+                    .FirstOrDefault();
 
-                var commitInfo = await githubClient.User.Get(branchCommit.Author.Login);
-                string commitUrl = string.Format(commitUrlFormat, owner, repo, branchCommit.Sha);
+                if (latestCommit != null)
+                {
+                    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
+                    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
 
-                teamsMessageBuilder.AppendLine("***The committer on branch " + branchName + ":*** " + commitInfo.Name + commitInfo.Login);
-                teamsMessageBuilder.AppendLine();
-                teamsMessageBuilder.AppendLine("***Commit content:*** " + branchCommit.Commit.Message);
-                teamsMessageBuilder.AppendLine();
-                teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
-                teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
+                    teamsMessageBuilder.AppendLine();
+                    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
+                    teamsMessageBuilder.AppendLine();
+                }
 
                 if (teamsMessageBuilder.Length > 0)
                 {
@@ -78,7 +81,7 @@ namespace FunctionApp
                 }
 
                 log.LogInformation("Function_Github_Teams completed successfully.");
-                return new OkObjectResult("Get the latest commit from the branch and send the message successfully!");
+                return new OkObjectResult("Get the latest commit and send the message successfully!");
             }
             catch (Exception ex)
             {
