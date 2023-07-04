@@ -59,7 +59,7 @@ namespace FunctionApp
                 if (!string.IsNullOrEmpty(teamsWebhookUrl))
                 {
                     var httpClient = new HttpClient();
-                    var payloadData = new { text = teamsMessage };
+                    var payloadData = new { text = requestBody };
                     var jsonPayload = JsonConvert.SerializeObject(payloadData);
                     var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                     var response = await httpClient.PostAsync(teamsWebhookUrl, content);
