@@ -48,6 +48,7 @@ namespace FunctionApp
             try
             {
                 string commitUrlFormat = "https://github.com/{0}/{1}/commit/{2}";
+
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
                 string sha = payload.head_commit?.id;
@@ -73,44 +74,6 @@ namespace FunctionApp
                     }
                 }
 
-                //StringBuilder teamsMessageBuilder = new StringBuilder();
-                //var branches = await githubClient.Repository.Branch.GetAll(owner, repo);
-
-                //var latestCommit = branches
-                //    .Select(branch => githubClient.Repository.Commit.Get(owner, repo, branch.Commit.Sha))
-                //    .Select(task => task.Result)
-                //    .OrderByDescending(commit => commit.Commit.Author.Date)
-                //    .FirstOrDefault();
-
-                //if (latestCommit != null)
-                //{
-                //    var commitInfo = await githubClient.User.Get(latestCommit.Author.Login);
-                //    string commitUrl = string.Format(commitUrlFormat, owner, repo, latestCommit.Sha);
-
-                //    teamsMessageBuilder.AppendLine("***The committer:*** " + commitInfo.Name + commitInfo.Login);
-                //    teamsMessageBuilder.AppendLine();
-                //    teamsMessageBuilder.AppendLine("***Commit content:*** " + latestCommit.Commit.Message);
-                //    teamsMessageBuilder.AppendLine();
-                //    teamsMessageBuilder.AppendLine("[See details on Git](" + commitUrl + ")");
-                //    teamsMessageBuilder.AppendLine();
-                //}
-
-                //if (teamsMessageBuilder.Length > 0)
-                //{
-                //    string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
-
-                //    var httpClient = new HttpClient();
-                //    var payloadData = new { text = teamsMessageBuilder.ToString() };
-                //    var jsonPayload = JsonConvert.SerializeObject(payloadData);
-                //    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                //    var response = await httpClient.PostAsync(teamsWebhookUrl, content);
-
-                //    if (!response.IsSuccessStatusCode)
-                //    {
-                //        return new StatusCodeResult((int)response.StatusCode);
-                //    }
-                //}
-
                 log.LogInformation("Function_Github_Teams completed successfully.");
                 return new OkObjectResult("Get the latest commit and send the message successfully!");
             }
@@ -124,3 +87,5 @@ namespace FunctionApp
         }
     }
 }
+
+
