@@ -111,7 +111,7 @@ namespace FunctionApp
                         break;
                 }
 
-                if (!string.IsNullOrEmpty(teamsWebhookUrl))
+                if (!string.IsNullOrEmpty(teamsMessage) && !string.IsNullOrEmpty(teamsWebhookUrl))
                 {
                     var httpClient = new HttpClient();
                     var payloadData = new { text = teamsMessage };
