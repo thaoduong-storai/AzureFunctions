@@ -70,21 +70,13 @@ namespace FunctionApp
 
                         if (isPullRequest)
                         {
-                            bool isApproved = pullRequestMerged && pullRequestState == "closed";
-
-                            if (isApproved)
+                            if (pullRequestMerged)
                             {
-                                log.LogInformation("Pull request has been approved and merged.");
-                                pullRequestMessageContent = $"*Pull request has been approved and merged*.\n\n";
-                                pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
-                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                                pullRequestMessageContent = "Pull request has been merged.";
                             }
                             else
                             {
-                                log.LogInformation("Pull request has not been approved and merged.");
-                                pullRequestMessageContent = $"==Pull request has not been approved and merged!!!== \n\n";
-                                pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
-                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                                pullRequestMessageContent = "Pull request has not been merged.";
                             }
                         }
 
