@@ -69,13 +69,37 @@ namespace FunctionApp
 
                         if (isPullRequest)
                         {
-                            if (pullRequestMerged)
+                            bool isApproved = pullRequestMerged && pullRequestState == "closed";
+
+                            if (isApproved)
                             {
-                                pullRequestMessageContent = "Pull request has been merged.";
+                                log.LogInformation("Pull request has been approved and merged.");
+                                pullRequestMessageContent = "Pull request has been approved and merged. \n\n";
+                                pullRequestMessageContent += $"*Pull request number:* {pullRequestNumber}\n\n";
+                                pullRequestMessageContent += $"*Pull request merge:* {pullRequestMerged}";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
                             }
                             else
                             {
-                                pullRequestMessageContent = "Pull request has not been merged.";
+                                log.LogInformation("Pull request has not been approved and merged.");
+                                pullRequestMessageContent = "Pull request has not been approved and merged!!! \n\n";
+                                pullRequestMessageContent += $"*Pull request number:* {pullRequestNumber}\n\n";
+                                pullRequestMessageContent += $"*Pull request merge:* {pullRequestMerged}";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                            }
+                            if (pullRequestMerged)
+                            {
+                                pullRequestMessageContent = "Pull request has been merged. \n\n";
+                                pullRequestMessageContent += $"*Pull request number:* {pullRequestNumber}\n\n";
+                                pullRequestMessageContent += $"*Pull request merge:* {pullRequestMerged}";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                            }
+                            else
+                            {
+                                pullRequestMessageContent = $"*Pull request has not been merged.* \n\n";
+                                pullRequestMessageContent += $"*Pull request number:* {pullRequestNumber}\n\n";
+                                pullRequestMessageContent += $"*Pull request merge:* {pullRequestMerged}";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
                             }
                         }
 
