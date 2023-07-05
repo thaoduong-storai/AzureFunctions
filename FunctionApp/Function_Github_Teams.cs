@@ -31,43 +31,84 @@ namespace FunctionApp
             {
                 string teamsWebhookUrl = Environment.GetEnvironmentVariable("TeamsWebhookUrl");
 
-                string sha = payload.head_commit != null ? payload.head_commit.id : null;
-                string commitUrl = payload.head_commit != null ? payload.head_commit.url : null;
-                string commitMessage = payload.head_commit != null ? payload.head_commit.message : null;
-                string committerName = payload.head_commit != null ? payload.head_commit.author?.name : null;
-                string commitTimestamp = payload.head_commit != null ? payload.head_commit.timestamp : null;
+                string eventType = req.Headers["X-GitHub-Event"];
 
-                string repositoryFullName = payload.repository != null ? payload.repository.full_name : null;
-                int pullRequestNumber = payload.pull_request != null ? payload.pull_request.number : 0;
-                string pullRequestState = payload.pull_request != null ? payload.pull_request.state : null;
-                string pullRequestUrl = payload.pull_request != null ? payload.pull_request.url : null;
-                bool pullRequestMerged = payload.pull_request != null ? payload.pull_request.merged : false;
-                bool isPullRequest = !string.IsNullOrEmpty(pullRequestState);
+                string teamsMessage = "";
 
-                string mergeCommitSha = payload.merge_commit_sha != null ? payload.merge_commit_sha : null;
 
-                string teamsMessage = $"***Id:*** {sha}\n\n";
-                teamsMessage += $"***The committer:*** {committerName}\n\n";
-                teamsMessage += $"***Commit content:*** {commitMessage}\n\n";
-                teamsMessage += $"***Timestamp:*** {commitTimestamp}\n\n";
-                teamsMessage += $"[See details on Git]({commitUrl})\n\n";
-
-                if (isPullRequest)
+                switch (eventType)
                 {
-                    bool isApproved = pullRequestMerged && pullRequestState == "closed";
+                    case "push":
+                        string sha = payload.head_commit != null ? payload.head_commit.id : null;
+                        string commitUrl = payload.head_commit != null ? payload.head_commit.url : null;
+                        string commitMessage = payload.head_commit != null ? payload.head_commit.message : null;
+                        string committerName = payload.head_commit != null ? payload.head_commit.author?.name : null;
+                        string commitTimestamp = payload.head_commit != null ? payload.head_commit.timestamp : null;
 
-                    if (isApproved)
-                    {
-                        log.LogInformation("Pull request has been approved and merged.");
-                        teamsMessage += "\n\nPull request has been approved and merged.";
-                        teamsMessage += $"***Merge:*** {pullRequestMerged}\n\n";
-                    }
-                    else
-                    {
-                        log.LogInformation("Pull request has not been approved and merged.");
-                        teamsMessage += $"\n\n##Pull request has not been approved and merged.##";
-                        teamsMessage += $"***Merge:*** {pullRequestMerged}\n\n";
-                    }
+                        string commitMessagePrefix = "";
+                        string commitMessageTitle = "Commit Information";
+                        string commitMessageContent = $"***Id:*** {sha}\n\n";
+                        commitMessageContent += $"***The committer:*** {committerName}\n\n";
+                        commitMessageContent += $"***Commit content:*** {commitMessage}\n\n";
+                        commitMessageContent += $"***Timestamp:*** {commitTimestamp}\n\n";
+                        commitMessageContent += $"[See details on Git]({commitUrl})\n\n";
+
+                        teamsMessage = $"## {commitMessageTitle} ##\n\n{commitMessageContent}\n\n";
+                        break;
+
+                    case "pull_request":
+                        string repositoryFullName = payload.repository != null ? payload.repository.full_name : null;
+                        int pullRequestNumber = payload.pull_request != null ? payload.pull_request.number : 0;
+                        string pullRequestState = payload.pull_request != null ? payload.pull_request.state : null;
+                        string pullRequestUrl = payload.pull_request != null ? payload.pull_request.url : null;
+                        bool pullRequestMerged = payload.pull_request != null ? payload.pull_request.merged : false;
+                        bool isPullRequest = !string.IsNullOrEmpty(pullRequestState);
+                        string mergeCommitSha = payload.merge_commit_sha != null ? payload.merge_commit_sha : null;
+                        
+                        string pullRequestMessageTitle = "Pull Request Information";
+                        string pullRequestMessageContent = "";
+
+                        if (isPullRequest)
+                        {
+                            bool isApproved = pullRequestMerged && pullRequestState == "closed";
+
+                            if (isApproved)
+                            {
+                                log.LogInformation("Pull request has been approved and merged.");
+                                pullRequestMessageContent += $"*Pull request has been approved and merged*.\n\n";
+                                pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                            }
+                            else
+                            {
+                                log.LogInformation("Pull request has not been approved and merged.");
+                                pullRequestMessageContent += $"==*Pull request has not been approved and merged!!!==* \n\n";
+                                pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
+                                pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
+                            }
+                        }
+
+                        teamsMessage = $"## {pullRequestMessageTitle} ##\n\n{pullRequestMessageContent}\n\n";
+                        break;
+
+                    case "pull_request_review":
+                        string reviewer = payload.review != null ? payload.review.user?.login : null;
+                        string reviewState = payload.review != null ? payload.review.state : null;
+
+                        string reviewMessageTitle = "Pull Request Review Information";
+                        string reviewMessageContent = "";
+
+                        if (!string.IsNullOrEmpty(reviewer) && !string.IsNullOrEmpty(reviewState))
+                        {
+                            reviewMessageContent = $"Reviewer: {reviewer}\nReview State: {reviewState}";
+                        }
+
+                        teamsMessage = $"## {reviewMessageTitle} ##\n\n{reviewMessageContent}\n\n";
+                        break;
+
+                    default:
+                        log.LogInformation($"Unsupported event type: {eventType}");
+                        break;
                 }
 
                 if (!string.IsNullOrEmpty(teamsWebhookUrl))
