@@ -100,8 +100,8 @@ namespace FunctionApp
 
                         if (!string.IsNullOrEmpty(reviewer) && !string.IsNullOrEmpty(reviewState))
                         {
-                            reviewMessageContent = $"**Reviewer:** {reviewer}\n\n";
-                            reviewMessageContent += $"**Review State:** {reviewState}";
+                            reviewMessageContent = $"*Reviewer:* {reviewer}\n\n";
+                            reviewMessageContent += $"*Review State:* {reviewState}";
                         }
 
                         teamsMessage = $"## {reviewMessageTitle} ##\n\n{reviewMessageContent}\n\n";
