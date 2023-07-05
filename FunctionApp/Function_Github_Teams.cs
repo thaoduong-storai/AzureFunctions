@@ -35,7 +35,6 @@ namespace FunctionApp
 
                 string teamsMessage = "";
 
-
                 switch (eventType)
                 {
                     case "push":
@@ -64,7 +63,7 @@ namespace FunctionApp
                         bool pullRequestMerged = payload.pull_request != null ? payload.pull_request.merged : false;
                         bool isPullRequest = !string.IsNullOrEmpty(pullRequestState);
                         string mergeCommitSha = payload.merge_commit_sha != null ? payload.merge_commit_sha : null;
-                        
+
                         string pullRequestMessageTitle = "Pull Request Information";
                         string pullRequestMessageContent = "";
 
@@ -131,5 +130,3 @@ namespace FunctionApp
         }
     }
 }
-
-
