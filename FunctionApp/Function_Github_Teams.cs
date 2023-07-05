@@ -75,14 +75,14 @@ namespace FunctionApp
                             if (isApproved)
                             {
                                 log.LogInformation("Pull request has been approved and merged.");
-                                pullRequestMessageContent += $"*Pull request has been approved and merged*.\n\n";
+                                pullRequestMessageContent = $"*Pull request has been approved and merged*.\n\n";
                                 pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
                                 pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
                             }
                             else
                             {
                                 log.LogInformation("Pull request has not been approved and merged.");
-                                pullRequestMessageContent += $"==*Pull request has not been approved and merged!!!==* \n\n";
+                                pullRequestMessageContent = $"==Pull request has not been approved and merged!!!== \n\n";
                                 pullRequestMessageContent += $"***Merge:*** {pullRequestMerged}\n\n";
                                 pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
                             }
@@ -100,7 +100,8 @@ namespace FunctionApp
 
                         if (!string.IsNullOrEmpty(reviewer) && !string.IsNullOrEmpty(reviewState))
                         {
-                            reviewMessageContent = $"Reviewer: {reviewer}\nReview State: {reviewState}";
+                            reviewMessageContent = $"**Reviewer:** {reviewer}\n\n";
+                            reviewMessageContent += $"**Review State:** {reviewState}";
                         }
 
                         teamsMessage = $"## {reviewMessageTitle} ##\n\n{reviewMessageContent}\n\n";
