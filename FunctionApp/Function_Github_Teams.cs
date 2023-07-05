@@ -40,8 +40,11 @@ namespace FunctionApp
                 string repositoryFullName = payload.repository != null ? payload.repository.full_name : null;
                 int pullRequestNumber = payload.pull_request != null ? payload.pull_request.number : 0;
                 string pullRequestState = payload.pull_request != null ? payload.pull_request.state : null;
+                string pullRequestUrl = payload.pull_request != null ? payload.pull_request.url : null;
                 bool pullRequestMerged = payload.pull_request != null ? payload.pull_request.merged : false;
                 bool isPullRequest = !string.IsNullOrEmpty(pullRequestState);
+
+                string mergeCommitSha = payload.merge_commit_sha != null ? payload.merge_commit_sha : null;
 
                 string teamsMessage = $"***Id:*** {sha}\n\n";
                 teamsMessage += $"***The committer:*** {committerName}\n\n";
@@ -57,11 +60,13 @@ namespace FunctionApp
                     {
                         log.LogInformation("Pull request has been approved and merged.");
                         teamsMessage += "\n\nPull request has been approved and merged.";
+                        teamsMessage += $"***Merge:*** {pullRequestMerged}\n\n";
                     }
                     else
                     {
                         log.LogInformation("Pull request has not been approved and merged.");
-                        teamsMessage += "\n\nPull request has not been approved and merged.";
+                        teamsMessage += $"\n\n##Pull request has not been approved and merged.##";
+                        teamsMessage += $"***Merge:*** {pullRequestMerged}\n\n";
                     }
                 }
 
