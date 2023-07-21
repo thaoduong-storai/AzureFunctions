@@ -1,12 +1,9 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/azure/functions-action
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy dotnet core app to Azure Function App - Demo-AzureFunctions
+name: Build and deploy dotnet core app to Azure Function App - DemoAzure-Function
 
 on:
-  pull_request:
-    types: [opened, closed, reopened]
-    
   push:
     branches:
       - master
@@ -44,7 +41,7 @@ jobs:
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'Demo-AzureFunctions'
+          app-name: 'DemoAzure-Function'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F05F0BF9B43E4B04B26629F502F1AE7F }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_DCA71D64D7DB4FA6B18BD8956DC28F9E }}
