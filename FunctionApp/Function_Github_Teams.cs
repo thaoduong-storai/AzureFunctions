@@ -82,7 +82,7 @@ namespace FunctionApp
                             else
                             {
                                 log.LogInformation("Pull request has not been approved and merged.");
-                                pullRequestMessageContent = "Pull request has not been approved and merged!!! \n\n";
+                                pullRequestMessageContent = $"***Pull request has not been approved and merged!!!*** \n\n";
                                 pullRequestMessageContent += $"*Pull request number:* {pullRequestNumber}\n\n";
                                 pullRequestMessageContent += $"*Pull request merge:* {pullRequestMerged}\n\n";
                                 pullRequestMessageContent += $"[See details on Git]({pullRequestUrl})\n\n";
@@ -140,4 +140,3 @@ namespace FunctionApp
         }
     }
 }
-//check commit mess
